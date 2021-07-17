@@ -67,9 +67,16 @@ class CompanyController extends Controller
             $image = base64_decode($request->input('logo'));
 
             $imageName = rand(111111111, 999999999) . '.jpg';
-            $p = Storage::disk('s3')->put('logos/' . $imageName, $image, 'public');
 
-            $companyDTO['logo'] = 'logos/' . $imageName;
+            if (env('USE_S3')) {
+                // save in s3
+                Storage::disk('s3')->put($imageName, $image, 'public');
+            } else if ($value) {
+                // save in local
+                Storage::disk('public')->put($imageName, $image, 'public');
+            }
+
+            $companyDTO['logo'] = $imageName;
         }
 
         return $this->apiResponse($this->repository->create($companyDTO));

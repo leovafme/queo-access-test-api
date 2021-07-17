@@ -35,4 +35,15 @@ class Company extends Model
    {
        return $this->hasMany(Employee::class);
    }
+
+    public function getLogoAttribute($value)
+    {
+        if ($value && env('USE_S3', false)) {
+            $value = env('AWS_S3_URL') . $value;
+        } else if ($value) {
+            $value = 'storage/' . $value;
+        }
+
+        return $value;
+    }
 }
