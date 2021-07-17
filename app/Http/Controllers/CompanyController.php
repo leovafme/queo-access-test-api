@@ -55,31 +55,14 @@ class CompanyController extends Controller
             return $this->apiResponse([], false, $validator->messages());
         }
 
-        // initial DTO
-        $companyDTO = [
-            'name' => $request->input('name'),
-            'email' => $request->input('email'),
-            'website' => $request->input('website'),
-        ];
+        $inputDTO = $this->proccessAndGenerateDTO(
+            $request->input('name'),
+            $request->input('email'),
+            $request->input('website'),
+            $request->input('logo'),
+        );
 
-        // save logo if inject in request
-        if ($request->input('logo')) {
-            $image = base64_decode($request->input('logo'));
-
-            $imageName = rand(111111111, 999999999) . '.jpg';
-
-            if (env('USE_S3')) {
-                // save in s3
-                Storage::disk('s3')->put($imageName, $image, 'public');
-            } else if ($value) {
-                // save in local
-                Storage::disk('public')->put($imageName, $image, 'public');
-            }
-
-            $companyDTO['logo'] = $imageName;
-        }
-
-        return $this->apiResponse($this->repository->create($companyDTO));
+        return $this->apiResponse($this->repository->create($inputDTO));
     }
 
     /**
@@ -102,7 +85,23 @@ class CompanyController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $rulesUpdate = $this->rules;
+        // validate unique for id
+        $rulesUpdate['email'] = $this->rules['email'] . ',email,'.$id;
+        $validator = Validator::make($request->all(), $rulesUpdate);
+
+        if ($validator->fails()) {
+            return $this->apiResponse([], false, $validator->messages());
+        }
+
+        $inputDTO = $this->proccessAndGenerateDTO(
+            $request->input('name'),
+            $request->input('email'),
+            $request->input('website'),
+            $request->input('logo'),
+        );
+
+        return $this->apiResponse($this->repository->update($inputDTO, $id));
     }
 
     /**
@@ -114,5 +113,42 @@ class CompanyController extends Controller
     public function destroy($id)
     {
         return $this->apiResponse($this->repository->delete($id));
+    }
+
+    /**
+     * parse data save image and return dto for save.
+     *
+     * @param  string  $name
+     * @param  string  $email
+     * @param  string  $website
+     * @param  string  $logo
+     * @return array
+     */
+    private function proccessAndGenerateDTO(string $name, string $email, string $website = null, string $logo = null) {
+        // initial DTO
+        $companyDTO = [
+            'name' => $name,
+            'email' => $email,
+            'website' => $website,
+        ];
+
+        // save logo if inject in request
+        if ($logo) {
+            $image = base64_decode($logo);
+
+            $imageName = rand(111111111, 999999999) . '.jpg';
+
+            if (env('USE_S3')) {
+                // save in s3
+                Storage::disk('s3')->put($imageName, $image, 'public');
+            } else if ($value) {
+                // save in local
+                Storage::disk('public')->put($imageName, $image, 'public');
+            }
+
+            $companyDTO['logo'] = $imageName;
+        }
+
+        return $companyDTO;
     }
 }
