@@ -9,3 +9,8 @@
 docker-compose up
 ```
 
+### Run seeder 10 companies and 50 employees
+- if use docker run command into container
+```batch
+php artisan db:seed --class=DatabaseSeeder
+```
