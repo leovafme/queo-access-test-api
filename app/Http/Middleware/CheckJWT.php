@@ -44,8 +44,6 @@ class CheckJWT
             if (!$user) {
                 return response()->json(["message" => "Unauthorized user"], 401);
             }
-
-            return response()->json(["message" => $user, "slss" => $tokenInfo]);
         } catch (InvalidTokenException $e) {
             return response()->json(["message" => $e->getMessage()], 401);
         } catch (CoreException $e) {
