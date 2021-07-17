@@ -5,6 +5,15 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Repositories\CompanyRepositoryInterface;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+Validator::extend('is_image',function($attribute, $value, $params, $validator) {
+    $image = base64_decode($value);
+    $f = finfo_open();
+    $result = finfo_buffer($f, $image, FILEINFO_MIME_TYPE);
+    return $result == 'image/png' || $result == 'image/jpeg';
+});
 
 class CompanyController extends Controller
 {
@@ -12,8 +21,9 @@ class CompanyController extends Controller
 
     private $rules = [
         'name' => 'required|max:50',
-        'email' => 'required|email|max:60',
+        'email' => 'required|email|max:60|unique:companies',
         'website' => 'nullable|url',
+        'logo' => 'nullable|is_image'
     ];
 
     public function __construct(CompanyRepositoryInterface $repository)
@@ -45,14 +55,24 @@ class CompanyController extends Controller
             return $this->apiResponse([], false, $validator->messages());
         }
 
-        $data = [
+        // initial DTO
+        $companyDTO = [
             'name' => $request->input('name'),
             'email' => $request->input('email'),
-            'logo' => $request->input('logo'),
             'website' => $request->input('website'),
         ];
 
-        return $this->repository->create($data);
+        // save logo if inject in request
+        if ($request->input('logo')) {
+            $image = base64_decode($request->input('logo'));
+
+            $imageName = rand(111111111, 999999999) . '.jpg';
+            $p = Storage::disk('s3')->put('logos/' . $imageName, $image, 'public');
+
+            $companyDTO['logo'] = 'logos/' . $imageName;
+        }
+
+        return $this->apiResponse($this->repository->create($companyDTO));
     }
 
     /**
