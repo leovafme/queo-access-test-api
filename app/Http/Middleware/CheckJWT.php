@@ -36,11 +36,16 @@ class CheckJWT
 
         try {
             $tokenInfo = $auth0->decodeJWT($accessToken);
+
+            $tokenInfo["accessToken"] = $accessToken;
+
             $user = $this->userRepository->getUserByDecodedJWT($tokenInfo);
+
             if (!$user) {
                 return response()->json(["message" => "Unauthorized user"], 401);
             }
 
+            return response()->json(["message" => $user, "slss" => $tokenInfo]);
         } catch (InvalidTokenException $e) {
             return response()->json(["message" => $e->getMessage()], 401);
         } catch (CoreException $e) {
