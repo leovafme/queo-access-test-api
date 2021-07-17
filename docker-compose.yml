@@ -1,0 +1,31 @@
+version: '2'
+
+services:
+    mariadb:
+        image: docker.io/bitnami/mariadb:10.2
+        environment:
+            - ALLOW_EMPTY_PASSWORD=yes
+            - MARIADB_USER=leovafme
+            - MARIADB_DATABASE=queotest
+            - MARIADB_PASSWORD=zJHp7MqjwJ49FtVA
+
+    queo-access-test-api:
+        tty: true
+        image: docker.io/bitnami/laravel:8
+        environment:
+            - DB_HOST=mariadb
+            - DB_USERNAME=leovafme
+            - DB_DATABASE=queotest
+            - DB_PASSWORD=zJHp7MqjwJ49FtVA
+        depends_on:
+            - mariadb
+        ports:
+            - 3000:3000
+        volumes:
+            - ./:/app
+        privileged: true # Privileged mode could be required to run this container under Windows
+
+    adminer:
+        image: adminer
+        ports:
+          - 8080:8080
