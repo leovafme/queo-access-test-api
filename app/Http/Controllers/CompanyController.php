@@ -90,7 +90,7 @@ class CompanyController extends Controller
      */
     public function show($id)
     {
-        //
+        return $this->apiResponse($this->repository->find($id));
     }
 
     /**
