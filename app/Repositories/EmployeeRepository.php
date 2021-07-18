@@ -21,7 +21,7 @@ class EmployeeRepository implements EmployeeRepositoryInterface
 
     public function all()
     {
-        return $this->model->all();
+        return $this->model->with(['company'])->get();
     }
 
     public function create(array $data)
