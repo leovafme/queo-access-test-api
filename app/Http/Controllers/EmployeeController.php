@@ -73,12 +73,29 @@ class EmployeeController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Employee  $employee
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request)
+    public function update(Request $request, $id)
     {
-        //
+        $rulesUpdate = $this->rules;
+        // validate unique for id
+        $rulesUpdate['email'] = $this->rules['email'] . ',email,'.$id;
+        $validator = Validator::make($request->all(), $rulesUpdate);
+
+        if ($validator->fails()) {
+            return $this->apiResponse([], false, $validator->messages());
+        }
+
+        $inputDTO = [
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+            'company_id' => $request->input('company_id'),
+        ];
+
+        return $this->apiResponse($this->repository->update($inputDTO, $id));
     }
 
     /**
