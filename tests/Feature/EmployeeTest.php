@@ -13,7 +13,7 @@ class EmployeeTest extends TestCase
      *
      * @return void
      */
-    public function test_employee()
+    public function test_list()
     {
         $response = $this->get('/api/employees');
 
