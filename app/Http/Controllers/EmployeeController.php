@@ -4,10 +4,19 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Repositories\EmployeeRepositoryInterface;
+use Illuminate\Support\Facades\Validator;
 
 class EmployeeController extends Controller
 {
     private $repository;
+
+    private $rules = [
+        'first_name' => 'required|max:60',
+        'last_name' => 'required|max:60',
+        'email' => 'required|email|max:60|unique:employees',
+        'phone' => 'nullable|max:60',
+        'company_id' => 'required|exists:companies,id',
+    ];
 
     public function __construct(EmployeeRepositoryInterface $repository)
     {
@@ -32,7 +41,21 @@ class EmployeeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), $this->rules);
+
+        if ($validator->fails()) {
+            return $this->apiResponse([], false, $validator->messages());
+        }
+
+        $inputDTO = [
+            'first_name' => $request->input('first_name'),
+            'last_name' => $request->input('last_name'),
+            'email' => $request->input('email'),
+            'phone' => $request->input('phone'),
+            'company_id' => $request->input('company_id'),
+        ];
+
+        return $this->apiResponse($this->repository->create($inputDTO));
     }
 
     /**
