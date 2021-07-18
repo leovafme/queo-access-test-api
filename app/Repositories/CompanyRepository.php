@@ -37,6 +37,9 @@ class CompanyRepository implements CompanyRepositoryInterface
 
     public function delete($id)
     {
+        // delete all employees by company
+        $this->model->find($id)->employees()->delete();
+        // delete company
         return $this->model->destroy($id);
     }
 
